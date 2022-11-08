@@ -1,0 +1,117 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Effectual Customer Management Account Permission Set
+
+Parameters:
+
+  SSOArn:
+    Type: String
+    Description: 'ARN of SSO Instances deployed in management account'
+    MinLength: 1
+
+Resources:
+
+  ManagementPermissionsSet:
+    Type: AWS::SSO::PermissionSet
+    Properties:
+      Name: 'ManagementAccount'
+      Description: 'Delegated Customer Permissions for Management Account'
+      InstanceArn: !Ref SSOArn
+      SessionDuration: PT2H ## 2 hours
+      Tags:
+        - Key: team
+          Value: mgmt
+      ManagedPolicies:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+      InlinePolicy: !Sub |
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "FullyDeniedServices",
+              "Effect": "Deny",
+              "Action": [
+                "organizations:*Handshake*",
+                "organizations:CreateOrganization",
+                "organizations:LeaveOrganization",
+                "organizations:DeleteOrganization",
+                "organizations:RemoveAccountFromOrganization",
+                "ec2:*",
+                "rds:*",
+                "aws-marketplace:*",
+                "aws-portal:*",
+                "cur:*",
+                "ce:*",
+                "iam:CreateUser",
+                "iam:CreateRole",
+                "iam:*SAML*",
+                "iam:*OpenID*"
+              ],
+              "Resource": "*"
+            },
+            {
+              "Sid": "DenyBillingBucket",
+              "Effect": "Deny",
+              "Action": [
+                "s3:*"
+              ],
+              "Resource": [
+                "arn:${AWS::Partition}:s3:::*somebucket*",
+                "arn:${AWS::Partition}:s3:::*someotherbucket*"
+              ]
+            },
+            {
+              "Sid": "DenyResaleCloudFormation",
+              "Effect": "Deny",
+              "Action": [
+                "cloudformation:*"
+              ],
+              "Resource": [
+                "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:*rwickit*",
+                "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:*rwickit2*"
+              ]
+            }
+            {
+              "Sid": "DenyResaleSCPs",
+              "Effect": "Deny",
+              "Action": [
+                "organizations:CreatePolicy",
+                "organizations:DescribeEffectivePolicy",
+                "organizations:TagResource",
+                "organizations:UpdatePolicy",
+                "organizations:DetachPolicy",
+                "organizations:EnablePolicyType",
+                "organizations:AttachPolicy",
+                "organizations:DeletePolicy",
+                "organizations:UntagResource",
+                "organizations:DisablePolicyType",
+                "organizations:DescribePolicy"
+              ],
+              "Resource": "*"
+            },
+            {
+              "Sid": "DenySsoPermissionSetMod",
+              "Effect": "Deny",
+              "Action": [
+                  "sso:AttachManagedPolicyToPermissionSet",
+                  "sso:DeletePermissionsPolicy",
+                  "sso:DetachManagedPolicyFromPermissionSet",
+                  "sso:PutPermissionsPolicy",
+                  "sso:UpdatePermissionSet"
+              ],
+              "Resource": "*",
+              "Condition": {
+                "StringEquals": {
+                  "aws:ResourceTag/team": "mgmt"
+                }
+              }
+            },
+            {
+              "Sid": "DenyIAMPermissionView",
+              "Effect": "Deny",
+              "Action": [
+                  "iam:*"
+              ],
+              "Resource": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_ManagementAccount*"
+            },
+          ]
+        }

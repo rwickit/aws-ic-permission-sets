@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Basic permissions for Operations
+
+Parameters:
+  SSOArn:
+    Type: String
+    Description: "ARN of SSO Config"
+    MinLength: 1
+
+Resources:
+  PermissionsSet:
+    Type: AWS::SSO::PermissionSet
+    Properties:
+      Name: "Ops"
+      Description: "For the delegation of AWS IC Operations"
+      InstanceArn: !Ref SSOArn
+      SessionDuration: PT2H ## 2 hours
+      ManagedPolicies:
+        - arn:aws:iam::aws:policy/AWSSSOMemberAccountAdministrator

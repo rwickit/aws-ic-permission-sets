@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Read Only access to security team
+
+Parameters:
+
+  SSOArn:
+    Type: String
+    Description: 'ARN of SSO Config'
+    MinLength: 1
+
+Resources:
+
+  PermissionsSet:
+    Type: AWS::SSO::PermissionSet
+    Properties:
+      Name: 'sec-team'
+      Description: 'Security Team read only access'
+      InstanceArn: !Ref SSOArn
+      SessionDuration: PT2H ## 2 hours
+      ManagedPolicies:
+        - arn:aws:iam::aws:policy/ReadOnlyAccess
