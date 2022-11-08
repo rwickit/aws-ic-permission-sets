@@ -1,2 +1,3 @@
-# aws-ic-permission-sets
-As collection of AWS IAM Identity Center (IC) Permission Sets
+# AWS Identity Center Permission Sets
+
+A basic collection of AWS IAM Identity Center (IC) Permission Sets
